@@ -1,0 +1,35 @@
+---
+- hosts: all
+  become: true
+  
+  tasks:
+  - name: Install Apache
+    yum: pkg=httpd state=latest
+
+  - name: Pull file from source
+    copy: 
+     dest: /var/www/html
+     src: /home/ansible/index.html
+     mode: 0644
+     group: apache
+     owner: apache
+   
+  
+  - name: Enable Apache on System Boot
+    service: name=httpd enabled=yes
+
+    notify:
+    - start apache
+    - setup firewalld
+    - reload firewalld
+
+  handlers:
+    - name: start apache
+      service: name=httpd state=started
+    - name: setup firewalld
+      firewalld:
+        service: http
+        permanent: true
+        state: enabled
+    - name: reload firewalld
+      service: name=firewalld state=restarted
